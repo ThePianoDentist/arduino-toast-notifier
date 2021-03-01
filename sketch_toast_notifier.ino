@@ -1,5 +1,5 @@
 #include <SoftwareSerial.h>
-SoftwareSerial wifiSerial(2, 3);      // RX, TX for ESP8266
+SoftwareSerial wifiSerial(2, 3);      // RX, TX out of uno and into ESP8266
 
 bool DEBUG = true;   //show more logs
 int responseTime = 40; //communication timeout
@@ -13,40 +13,13 @@ unsigned long lastReadyTime; // millis() resets after 50 days TODO handle rollov
 
 void setup()
 {
-  pinMode(13,OUTPUT);  //set build in led as output
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
-
-  // Open serial communications and wait for port to open esp8266:
-  Serial.begin(9600);
- wifiSerial.begin(9600);
- //delay(100);
- //sendToWifi("AT+CIPMODE=0",responseTime,DEBUG);
- delay(100);
- sendToWifi("AT+CIPMUX=1",responseTime,DEBUG);
- delay(100);
-    Serial.println("setup complete");
   
-
-}
-
-void sendCmdsToWifi(){
-    while(wifiSerial.available() > 0) 
-    {
-      char a = wifiSerial.read();
-      if(a == '\0')
-        continue;
-      if(a != '\r' && a != '\n' && (a < 32))
-        continue;
-      Serial.print(a);
-    }
-    
-    while(Serial.available() > 0)
-    {
-      char a = Serial.read();
-      Serial.write(a);
-      wifiSerial.write(a);
-    }
+  Serial.begin(9600);
+  wifiSerial.begin(9600);
+  sendToWifi("AT+CIPMUX=1",responseTime,DEBUG);
+  Serial.println("setup complete");
 }
 
 void loop()
@@ -54,7 +27,7 @@ void loop()
   distance = distance_measure();
   if (distance < 10){
     unsigned long now = millis();
-    if (lastReadyTime == 0 || (now - lastReadyTime) > 10000){ // 2mins
+    if (lastReadyTime == 0 || (now - lastReadyTime) > 30000){ // 30s
       while (true){
         String fr = sendReadyReq();
         char final_response[fr.length()];
@@ -72,6 +45,7 @@ void loop()
 }
 
 String sendReadyReq(){
+  // can we use this instead https://github.com/jandrassy/WiFiEspAT/blob/master/examples/Basic/WebClient/WebClient.ino?
   Serial.println("sending ready req");
   sendToWifi("AT+CIPSTART=4,\"TCP\",\"kettle-on.com\",80",responseTime,DEBUG);
   delay(50);
@@ -88,7 +62,7 @@ String sendReadyReq(){
 }
 
 
-
+// copy-pasted from https://create.arduino.cc/projecthub/imjeffparedes/add-wifi-to-arduino-uno-663b9e imjeffparades
 /*
 * Name: sendToWifi
 * Description: Function used to send data to ESP8266.
@@ -116,6 +90,7 @@ String sendToWifi(String command, const int timeout, boolean debug){
   return response;
 }
 
+// copy-pasted from great example for hc-sr04 https://create.arduino.cc/projecthub/abdularbi17/ultrasonic-sensor-hc-sr04-with-arduino-tutorial-327ff6
 int distance_measure(){
   digitalWrite(trigPin, LOW); // Clears the trigPin condition
   delayMicroseconds(2);
@@ -129,8 +104,8 @@ int distance_measure(){
   // Calculating the distance
   distance = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
   // Displays the distance on the Serial Monitor
-  //Serial.print("Distance: ");
-  //Serial.print(distance);
-  //Serial.println(" cm");
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
   return distance;
 }

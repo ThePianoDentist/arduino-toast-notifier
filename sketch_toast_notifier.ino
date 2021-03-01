@@ -18,7 +18,7 @@ void setup()
   
   Serial.begin(9600);
   wifiSerial.begin(9600);
-  sendToWifi("AT+CIPMUX=1",responseTime,DEBUG);
+  sendToWifi("AT+CIPMUX=1",responseTime,DEBUG); // might not be needed (debugging red herring?)
   Serial.println("setup complete");
 }
 

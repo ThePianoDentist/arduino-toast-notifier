@@ -1,7 +1,8 @@
 #include <SoftwareSerial.h>
-SoftwareSerial wifiSerial(2, 3);      // RX, TX out of uno and into ESP8266
+SoftwareSerial wifiSerial(2, 3);      // 2 to TX of ESP8266. 3 to RX of ESP8266
 
 bool DEBUG = true;   //show more logs
+int toast_distance_threshold = 10; //cm
 int responseTime = 40; //communication timeout
 
 #define trigPin 12
@@ -17,6 +18,7 @@ void setup()
   pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
   
   Serial.begin(9600);
+  
   wifiSerial.begin(9600);
   sendToWifi("AT+CIPMUX=1",responseTime,DEBUG); // might not be needed (debugging red herring?)
   Serial.println("setup complete");
@@ -25,7 +27,7 @@ void setup()
 void loop()
 {
   distance = distance_measure();
-  if (distance < 10){
+  if (distance <= toast_distance_threshold){
     unsigned long now = millis();
     if (lastReadyTime == 0 || (now - lastReadyTime) > 30000){ // 30s
       while (true){
